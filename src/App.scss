@@ -1,11 +1,89 @@
 @import "custom";
 
+html {
+  overflow-x: hidden;
+}
+body {
+  font-family: 'Cabin', sans-serif;
+}
+
+.btn {
+  &.btn-primary {
+    color: $white;
+    background-color: $brown;
+    border-color: $brown;
+    transition: background-color 1s ;
+    &:hover {
+      background-color: $orange;
+      border-color: $orange;
+    }
+  }
+}
+
+/* Welcome section */
+.welcome-section {
+  padding: 3rem 0;
+
+  h1 {
+    font-weight: 700;
+  }
+}
+
+@keyframes TransitioningBackground {
+  0% {
+    background-position: 1% 0%;
+  }
+  50% {
+    background-position: 99% 100%;
+  }
+  100% {
+    background-position: 1% 0%;
+  }
+}
+
+.welcome-btn {
+  color: $white;
+  background-color: $brown;
+  border-color: $white;
+  margin-top: 2rem;
+  //Background color shift
+  overflow: hidden;
+  background-image: (linear-gradient(270deg, $brown, $orange));
+  background-size: 400% 400%;
+  animation: TransitioningBackground 6s ease infinite;
+
+  &:hover {
+    background-image: (linear-gradient(to left, $orange, $brown));
+    // To ease the button growth on hover
+    transition: 0.2s;
+    cursor: pointer;
+  }
+}
+
 /* Contact section */
 .contact-section {
-  padding-top: 5rem;
-  .social {
-    margin-top: 5em;
+  margin: 2rem 0;
 
+  a {
+    color: $orange;
+    transition: color 0.5s ease;
+    &:hover {
+      color: $brown;
+    }
+  }
+  .social {
+    margin-top: 3em;
+    
+    a {
+      color: $orange;
+      transition: color 0.5s ease;
+      &:hover {
+        color: $brown;
+      }
+  }
+  }
+  .card {
+    border-bottom: 0.25rem solid $orange;
   }
 }
 
@@ -73,4 +151,19 @@
 }
 .bg-red {
   background-color: #d9534f !important;
+}
+
+
+/* Footer */
+footer {
+  background-color: $dark-brown;
+  color: $white;
+
+  a {
+    color: $white;
+    transition: color 0.5s ease;
+    &:hover {
+      color: $orange;
+    }
+  }
 }

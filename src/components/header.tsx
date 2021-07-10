@@ -19,7 +19,7 @@ export const Header = () => {
 
     return (
         <header>
-            <nav className="navbar  navbar-expand-lg navbar-light">
+            <nav className="navbar  navbar-expand-lg navbar-light border-bottom">
                 <a className="navbar-brand" href="/"><img src={logo} alt="Logo" />Crypto dashboard</a>
                 <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span className="navbar-toggler-icon"></span>
