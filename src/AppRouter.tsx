@@ -1,5 +1,5 @@
 import React from "react";
-import {BrowserRouter as Router, Route} from "react-router-dom";
+import {BrowserRouter, Route} from "react-router-dom";
 import { Dashboard } from "./pages/dashboard";
 import { Home } from "./pages/home";
 
@@ -7,30 +7,30 @@ export const routerLinks = [
     {
         label: "Home",
         href: "/",
-        exact: true,
+        exactUrl: true,
         component: Home
     },
     {
         label: "Dashboard",
         href: "/dashboard",
-        exact: false,
+        exactUrl: false,
         component: Dashboard
     }
 ]
 
 const getRoutes = () => {
-    return routerLinks.map(({ label, href, exact, component }) => {
+    return routerLinks.map(({ label, href, component }) => {
         return (
-            <Route key={label} path={href} {...exact} component={component} />
+            <Route key={label} path={href} exact component={component} />
         )
     })
 }
 
-function AppRouter() {
+function AppRouter(props:any) {
     return (
-        <Router>
+        <BrowserRouter>
             {getRoutes()}
-        </Router>
+        </BrowserRouter>
     );
 }
 

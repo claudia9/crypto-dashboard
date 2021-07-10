@@ -3,16 +3,18 @@ import { Footer } from './footer';
 import { Header } from './header';
 
 type Props = {
-    children: JSX.Element
+    children:  JSX.Element|JSX.Element[]
 }
 
 export const Page = ({children} : Props) => {
 
     return (
-        <div>
-            <Header></Header>
-            {children}
-            <Footer></Footer>
+        <div className="d-flex flex-column min-vh-100">
+            <Header />
+                <div className="flex-fill container">
+                    {children}
+                </div>
+            <Footer/>
         </div>
     );
 }
