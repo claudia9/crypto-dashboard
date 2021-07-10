@@ -1,0 +1,30 @@
+.Header {
+    display: grid;
+    grid-template-areas: "logo nav";
+}
+
+.Nav {
+    grid-area: nav;
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    align-items: center;
+    justify-items: center;
+}
+
+.Paella {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .Header {
+        grid-template-areas: "logo paella" "nav nav";
+    }
+    .Nav {
+        grid-template-rows: repeat(4, auto);
+        grid-template-columns: none;
+        grid-row-gap: 20px;
+    }
+    .Paella {
+        display: block;
+    }
+}
