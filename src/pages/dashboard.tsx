@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Page } from '../components/page';
 import { Card } from '../components/card';
-//import { w3cwebsocket as W3CWebSocket } from "websocket";
-//import { ICurrency } from '../models/currency.interface';
-//import axios from 'axios';
 import { Dropdown } from '../components/dropdown';
 import { ICurrency } from '../models/currency.interface';
 import axios from 'axios';
-import { useCallback } from 'react';
 
 
 
@@ -18,8 +14,20 @@ export const Dashboard = () => {
 
     const [updated, setUpdated] = useState<boolean>(false);
 
-    const processWebSocketData = useCallback((msg: string) => {
-        console.log("updating...");
+
+    // Posibility to use WebSocket instead of Axios
+    /*useEffect(() => {
+        const pricesWs = new WebSocket(('wss://ws.coincap.io/prices?assets=' + chosenCurrencies.toString()));
+        
+        const intervalId = setInterval(() => {  //assign interval to a variable to clear it.
+            pricesWs.onmessage = function (msg) {
+                console.log("Updating....");
+                processWebSocketData(msg.data);
+            }
+        }, 10000); return () => clearInterval(intervalId);
+    });
+
+    async function processWebSocketData(msg: string) {
         var currencies = msg.split(',');
         if (currencies.length > 1) return; //Ignore traces with more than one.
 
@@ -27,30 +35,19 @@ export const Dashboard = () => {
         currencies.map((c) => {
             const id = c.split(':')[0].replace(/[^a-zA-Z ]/g, "");
             const value = c.split(':')[1].replace(/[^\d+(.\d)]/g, "");
-            return updatedList = updatedList.map( item => {
-                if (item.id === id) { item.priceUsd = value}
+            return updatedList = updatedList.map(item => {
+                if (item.id === id) { item.priceUsd = value }
                 return item;
-             });
+            });
         });
         setCurrencyList(updatedList);
-    }, [currencyList]);
-
-    // Posibility to use WebSocket instead of Axios
-    useEffect(() => {
-        const pricesWs = new WebSocket(('wss://ws.coincap.io/prices?assets=' + chosenCurrencies.toString()));
-
-            pricesWs.onmessage = function (msg) {
-                processWebSocketData(msg.data);
-    
-            }
-    }, [chosenCurrencies, processWebSocketData]);
-
+    };*/
 
     useEffect(() => {
         //const intervalId = setInterval(() => {  //assign interval to a variable to clear it.
-            console.log("Updating...");
-            setUpdated(false);
-            async function retrieveCurrenciesAxios() {
+        //console.log("Updating...");
+        setUpdated(false);
+        async function retrieveCurrenciesAxios() {
             axios({
                 method: "GET",
                 url: "https://api.coincap.io/v2/assets",
@@ -73,11 +70,11 @@ export const Dashboard = () => {
                 })
         };
         retrieveCurrenciesAxios();
-    //}, 5000)
-    //return () => clearInterval(intervalId);
-    }, [updated, chosenCurrencies]);
+        //}, 5000)
+        //return () => clearInterval(intervalId);
+    }, [updated, chosenCurrencies, currencyList]);
 
-    
+
     function onDelete(id: string) {
         //console.log("Delete " + id);
         setChoseCurrencies(chosenCurrencies.filter(i => i !== id));
@@ -86,7 +83,7 @@ export const Dashboard = () => {
 
     function onAdd(id: string) {
         //console.log("Add " + id);
-        if (chosenCurrencies.includes(id)) {return;}    // Ignore if it already exists
+        if (chosenCurrencies.includes(id)) { return; }    // Ignore if it already exists
         chosenCurrencies.push(id);
         setChoseCurrencies(chosenCurrencies);
         setUpdated(true);
@@ -98,11 +95,12 @@ export const Dashboard = () => {
                 <h1>Dashboard</h1>
                 <p className="lead">Check the prices of different cryptocurrencies in real-time. The cards are being updated every continuously. Click to the button below to add more cards to your dashboard. You also have the possibility to hide the cards that you no longer use. Enjoy! :-)</p>
                 <div className="container">
-                    <Dropdown items={allCurrencies.filter(d => !chosenCurrencies.includes(d))} onAdd={(id) => onAdd(id)}/>
+                    <Dropdown items={allCurrencies.filter(d => !chosenCurrencies.includes(d))} onAdd={(id) => onAdd(id)} />
                     <div className="row">
                         {chosenCurrencies.map((c) => {
-                            const currency =  currencyList.find(o => o.id === c);
-                            return (currency ? <Card key={currency.id} id={currency.id} name={currency.name} price={currency.priceUsd} onDelete={() => onDelete(currency.id)} /> : null)})
+                            const currency = currencyList.find(o => o.id === c);
+                            return (currency ? <Card key={currency.id} id={currency.id} name={currency.name} price={currency.priceUsd} onDelete={() => onDelete(currency.id)} /> : null)
+                        })
                         }
                     </div>
                 </div>
