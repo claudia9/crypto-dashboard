@@ -19,8 +19,6 @@ describe("Ensure possibility to add more cards", () => {
     });
   });
 
-  jest.mock('axios');
-
 describe('fetchDataAxios', () => {
   it('fetches successfully data from API using Axios', async () => {
 
