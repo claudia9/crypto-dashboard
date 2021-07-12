@@ -20,8 +20,8 @@ body {
   }
 }
 
-/* Welcome section */
-.welcome-section {
+/* Sections */
+.welcome-section, .dashboard-section {
   padding: 3rem 0;
 
   h1 {
@@ -136,23 +136,33 @@ body {
   background: rgba(0, 0, 0, 0.1);
   width: 100%;
   text-decoration: none;
+  border: 0;
 }
 .card-box:hover .card-box-footer {
   background: rgba(0, 0, 0, 0.3);
 }
-.bg-blue {
-  background-color: #00c0ef !important;
-}
-.bg-green {
-  background-color: #00a65a !important;
-}
 .bg-orange {
-  background-color: #f39c12 !important;
-}
-.bg-red {
-  background-color: #d9534f !important;
+  background-color: $orange !important;
 }
 
+/* Dashboard > Data */
+.posts {
+  list-style: none;
+  margin: 0px auto;
+  width: 800px;
+  text-align: left;
+}
+.error {
+  color: red;
+}
+
+/* Dropdown menu */
+.scrollable-menu {
+  height: auto;
+  max-height: 200px;
+  overflow-x: hidden;
+  cursor: pointer;
+}
 
 /* Footer */
 footer {

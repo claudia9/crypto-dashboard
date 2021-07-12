@@ -1,21 +1,37 @@
-import * as React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { faBitcoin } from '@fortawesome/free-brands-svg-icons';
+
 
 type CardProps = {
-    children?:  JSX.Element|JSX.Element[]
+    id: string,
+    name:  string,
+    price: number,
+    onDelete: (id: string) => void
 }
 
-export const Card = ({children} : CardProps) => {
+export const Card = ({id, name, price, onDelete} : CardProps) => {
+    const [localPrice, setLocalPrice] = useState<number>(0);
+
+    useEffect(() => {
+        if (price === localPrice) { // Do nothing
+        } else {
+            setLocalPrice(price);
+        }
+      }, [price, localPrice]);
+
     return (
         <div className="col-lg-3 col-sm-6">
-                <div className="card-box bg-blue">
+                <div className="card-box bg-orange">
                     <div className="inner">
-                        <h3> 13436 </h3>
-                        <p> Student Strength </p>
+                        <h3>{name}</h3>
+                        <p>{localPrice} USD</p>
                     </div>
                     <div className="icon">
-                        <i className="fa fa-graduation-cap" aria-hidden="true"></i>
+                        <FontAwesomeIcon icon={faBitcoin} />
                     </div>
-                    <a href="/" className="card-box-footer">View More <i className="fa fa-arrow-circle-right"></i></a>
+                    <button className="card-box-footer" onClick={() => onDelete(id)}>Delete <FontAwesomeIcon icon={"trash-alt"}/></button>
                 </div>
             </div>
     )
