@@ -1,116 +1,108 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Page } from '../components/page';
 import { Card } from '../components/card';
 import { Dropdown } from '../components/dropdown';
-import { ICurrency, IPrice } from '../models/currency.interface';
+import { ICurrency } from '../models/currency.interface';
 
-// Initializable variables
-let retrievedAll = false;
-let pricesWs: WebSocket;
 
 export const Dashboard = () => {
-    const [allCurrencies, setAllCurrencies] = useState<string[]>([]);
-    const [cryptoAssets, setCryptoAssets] = useState<ICurrency[]>([]);
-    const [chosenCurrencies, setChoseCurrencies] = useState<string[]>(['bitcoin', 'ethereum', 'solana', 'cardano', 'xrp']);
-
-    const [cryptoPrices, SetCryptoPrices] = useState<IPrice[]>([]);
+    const [allCurrencies, setAllCurrencies] = useState<ICurrency[]>([]);   // All the currencies
+    const [filteredCurrencies, setFilteredCurrencies] = useState<ICurrency[]>([]);   //Filtered currencies
+    const [selectedCurrencies, setSelectedCurrencies] = useState(["ethereum", "bitcoin"]);   //Name of the selected currencies to filter
+    //const [pastData, setPastData] = useState({});
 
     const [updated, setUpdated] = useState<boolean>(false);
 
-    function initializeCurrencies() {
-        if (retrievedAll) { return; } // No need to return more than once
-        fetch(`https://api.coincap.io/v2/assets`, {
-            method: 'GET',
-            redirect: 'follow'
-        })
-            .then(results => results.json())
-            .then(results => {
-                const all: string[] = results?.data.map((res: any) => (res.id));
-                const prices: IPrice[] = results?.data.map((res: any) => ({
-                    id: res.id,
-                    currentPrice: res.priceUsd,
-                    previousPrice: res.priceUsd
-                }))
-                SetCryptoPrices(prices);
-                setAllCurrencies(all);
-                retrievedAll = true;
+    const ws = useRef(null);    // Here so that it doesn't re-renders on every call.
+    let first = useRef(false);  //Prevents API call on our first render.
+    const url = `https://api.coincap.io/v2/assets`;
+    
+    useEffect(() => {
+        // Connect to websocket AP
+        ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + selectedCurrencies.toString());
+
+        // Inside useEffect we need to make API with async function
+        const apiCall = async () => {
+            let all: ICurrency[] = [];
+            await fetch(url)
+                .then((res) => res.json())
+                .then((data) => all = (data.data.map((c: ICurrency) => ({ id: c.id, symbol: c.symbol, name: c.name, priceUsd: c.priceUsd }))));
+                
+            setAllCurrencies(all);
+
+            let filtered = all.filter(c => selectedCurrencies.includes(c.id));
+
+            //Sort filtered currency pairs alphabetically
+            filtered = filtered.sort((a, b) => {
+                if (a.id < b.id) {
+                    return -1;
+                }
+                if (a.id > b.id) {
+                    return 1
+                }
+                return 0;
             });
-    }
+
+            setFilteredCurrencies(filtered);
+
+            first.current = true;
+
+        };
+        //Cal asyncs function
+        apiCall();
+    }, [])
 
     useEffect(() => {
-        const retrieveChosenCurrencies = () => {
-            fetch(`https://api.coincap.io/v2/assets?ids=${chosenCurrencies.toString()}`, {
-                method: 'GET',
-                redirect: 'follow'
-            })
-                .then(results => results.json())
-                .then(results => {
-                    const { data } = results;
-                    setCryptoAssets(data);
-                });
+        //Prevent this hook from running on initial render
+        if (!first.current) {
+            return;
         }
+        ws.current.onmessage = (msg: any) => {
+            //console.log("on message...");
+            let data = JSON.parse(msg.data);
 
-        initializeCurrencies();
-        retrieveChosenCurrencies();
-        setUpdated(false);
+            let newList: ICurrency[] = [];
+            //console.log(data);
+            Object.keys(data).forEach(key => {
+                newList = filteredCurrencies.map((c: ICurrency) => {
+                    if (c.id === key) {
+                        const updatedC = {
+                            ...c,
+                            priceUsd: data[key]
+                        };
+                        return updatedC;
+                    }
+                    return c;
+                })
 
-    }, [updated, chosenCurrencies]);
-
-    useEffect(() => {
-        const updatePrice = (msg: string) => {
-            if (msg) {
-                let tmpCryptoPrices: IPrice[] = cryptoPrices;
-                const list: string[] = Object.keys(msg);
-                list.forEach(curre => {
-                    const el = tmpCryptoPrices.find(p => p.id === curre);
-                    if (el === undefined) { return; }
-                    const tmpPrev: string = el.currentPrice;
-                    var tmpCurrent: string = msg[curre];
-                    tmpCryptoPrices.find(p => p.id === curre).currentPrice = tmpCurrent;
-                    tmpCryptoPrices.find(p => p.id === curre).previousPrice = tmpPrev;
-                    SetCryptoPrices(tmpCryptoPrices);
-                });
-            }
+                setFilteredCurrencies(newList);
+            });
         }
-        const connectWs = () => {
-            pricesWs = new WebSocket(
-                `wss://ws.coincap.io/prices?assets=${chosenCurrencies.toString()}`
-            );
-            pricesWs.onmessage = msg => {
-                setInterval(function () {
-                    updatePrice(JSON.parse(msg.data));
-                }, 2000);//Update every 2 seconds 
-            };
-            pricesWs.onerror = err => {
-                return () => pricesWs.close();
-            };
-            pricesWs.onclose = () => connectWs();
-        }
-        connectWs();
-        return () => pricesWs.close();
-    }, [chosenCurrencies, cryptoPrices]);
+    }, [selectedCurrencies, updated]);
 
     function onDelete(id: string) {
-        setChoseCurrencies(chosenCurrencies.filter(i => i !== id));
         setUpdated(true);
+        setSelectedCurrencies(selectedCurrencies.filter(i => i !== id));
+        setUpdated(false);
     }
 
     function onAdd(id: string) {
-        if (chosenCurrencies.includes(id)) { return; }    // Ignore if it already exists
-        chosenCurrencies.push(id);
-        setChoseCurrencies(chosenCurrencies);
         setUpdated(true);
+        if (selectedCurrencies.includes(id)) { return; }    // Ignore if it already exists
+        selectedCurrencies.push(id);
+        setSelectedCurrencies(selectedCurrencies);
+        setUpdated(false);
     }
 
 
     const CardItem: any = ({ id, name, priceUsd }: { id: string, name: string, priceUsd: string }) => {
-        var prices = cryptoPrices.find(d => d.id === id);
+        var prices = filteredCurrencies.find(d => d.id === id);
 
-        const currentPriceInFloat = parseFloat(prices?.currentPrice).toPrecision(4);
-        const PreviousPriceInFloat = parseFloat(prices?.previousPrice)?.toPrecision(4);
+        const currentPriceInFloat = parseFloat(prices.priceUsd).toFixed(2);
+        //const PreviousPriceInFloat = parseFloat(prices?.priceUsd)?.toPrecision(4);
 
         return (
-            <Card key={id} id={id} name={name} currentPrice={currentPriceInFloat} previousPrice={PreviousPriceInFloat} onDelete={() => onDelete(id)} />
+            <Card key={id} id={id} name={name} currentPrice={currentPriceInFloat} previousPrice={currentPriceInFloat} onDelete={() => onDelete(id)} />
         )
     }
 
@@ -120,12 +112,12 @@ export const Dashboard = () => {
                 <h1>Dashboard</h1>
                 <p className="lead">Check the prices of different cryptocurrencies in real-time. The cards are being updated every continuously. Click to the button below to add more cards to your dashboard. You also have the possibility to hide the cards that you no longer use. Enjoy! :-)</p>
                 <div className="container">
-                    <Dropdown items={(allCurrencies.filter(d => !chosenCurrencies.includes(d)))} onAdd={(id) => onAdd(id)} />
+                    <Dropdown items={(allCurrencies.filter(d => !selectedCurrencies.includes(d.id)))} onAdd={(id) => onAdd(id)} />
                     <div className="row">
-                        {cryptoAssets && cryptoAssets.map((c: ICurrency) => {
+                        {filteredCurrencies && filteredCurrencies.map((c: ICurrency) => {
                             return (c ? <CardItem key={c.id} {...c} /> : null)
                         })
-                        }
+                    }
                     </div>
                 </div>
             </section>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 type DropdownProps = {
-    items: string[],
+    items: any[],
     onAdd: (id: string) => void
 }
 
@@ -16,7 +16,7 @@ export const Dropdown = ({ items, onAdd }: DropdownProps) => {
             <button className="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" onClick={() => setOpen(!open)}> Add currencies</button>
             <ul className={"dropdown-menu scrollable-menu " + (open ? "show" : "")} aria-labelledby="dropdownMenuButton1">
                 {items.map((i) => {
-                    return <li key={i} className="dropdown-item" onClick={() => onAdd(i)}><p>{i}</p></li>
+                    return <li key={i.symbol} className="dropdown-item" onClick={() => onAdd(i.symbol)}><p>{i.name}</p></li>
                 })}
             </ul>
         </div>
