@@ -8,9 +8,8 @@ import { ICurrency } from '../models/currency.interface';
 export const Dashboard = () => {
     const [allCurrencies, setAllCurrencies] = useState<ICurrency[]>([]);   // All the currencies
     const [filteredCurrencies, setFilteredCurrencies] = useState<ICurrency[]>([]);   //Filtered currencies
-    const [selectedCurrencies, setSelectedCurrencies] = useState(["ethereum", "bitcoin"]);   //Name of the selected currencies to filter
+    const [selectedCurrencies, setSelectedCurrencies] = useState([]);   //Name of the selected currencies to filter
 
-    let first = useRef(false);  //Prevents API call on our first render.
 
     useEffect(() => {
         const url = `https://api.coincap.io/v2/assets`;
@@ -35,7 +34,6 @@ export const Dashboard = () => {
             });
 
             setAllCurrencies(sorted);
-            first.current = true;
         };
         //Cal asyncs function
         apiCall();
@@ -44,7 +42,7 @@ export const Dashboard = () => {
 
     function onDelete(id: string) {
         setSelectedCurrencies(prevSelectedCurrencies => prevSelectedCurrencies.filter(i => i !== id));
-        
+
         setFilteredCurrencies(prevFilteredCurrencies => prevFilteredCurrencies.filter(i => i.id !== id));
     }
 
@@ -61,19 +59,23 @@ export const Dashboard = () => {
         const [price, setPrice] = useState(priceUsd);
         const prevPrice = usePrevious(price);
 
-        const ws = useRef(null);
-        useEffect(() => {
-            // Connect to websocket AP
-            ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + id);
+        let ws = useRef(null);
 
-            ws.current.onmessage = (msg: any) => {
+        useEffect(() => {
+            ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + id);
+            ws.current.onmessage = function (msg: any) {
                 let data = JSON.parse(msg.data);
 
                 if (data[id] && data[id] !== prevPrice) {
                     setPrice(data[id]);
                 }
             }
-        }, [price, prevPrice, id]);
+
+            // Close this websocket before next effect runs
+            return () => {
+                ws.current.close();
+            }
+        }, [id, prevPrice]);
 
         const currentPriceInFloat = parseFloat(price);
         const previousPriceInFloat = parseFloat(prevPrice);

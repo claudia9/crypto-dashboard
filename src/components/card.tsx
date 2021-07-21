@@ -16,7 +16,7 @@ export const Card = ({id, name, currentPrice, previousPrice, onDelete} : CardPro
                 <div className="card-box bg-orange">
                     <div className="inner">
                         <h3>{name}</h3>
-                        <p>{currentPrice.toFixed(2)} USD</p>
+                        <p>{currentPrice.toFixed(4)} USD</p>
                     </div>
                     <div className="icon">
                         <FontAwesomeIcon icon={isIncreasing ? "arrow-up" : "arrow-down"} />
