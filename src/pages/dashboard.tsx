@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Page } from '../components/page';
 import { Card } from '../components/card';
 import { Dropdown } from '../components/dropdown';
@@ -9,17 +9,11 @@ export const Dashboard = () => {
     const [allCurrencies, setAllCurrencies] = useState<ICurrency[]>([]);   // All the currencies
     const [filteredCurrencies, setFilteredCurrencies] = useState<ICurrency[]>([]);   //Filtered currencies
     const [selectedCurrencies, setSelectedCurrencies] = useState(["ethereum", "bitcoin"]);   //Name of the selected currencies to filter
-    //const [pastData, setPastData] = useState({});
 
-    const [updated, setUpdated] = useState<boolean>(false);
-
-    const ws = useRef(null);    // Here so that it doesn't re-renders on every call.
     let first = useRef(false);  //Prevents API call on our first render.
-    const url = `https://api.coincap.io/v2/assets`;
-    
+
     useEffect(() => {
-        // Connect to websocket AP
-        ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + selectedCurrencies.toString());
+        const url = `https://api.coincap.io/v2/assets`;
 
         // Inside useEffect we need to make API with async function
         const apiCall = async () => {
@@ -27,13 +21,10 @@ export const Dashboard = () => {
             await fetch(url)
                 .then((res) => res.json())
                 .then((data) => all = (data.data.map((c: ICurrency) => ({ id: c.id, symbol: c.symbol, name: c.name, priceUsd: c.priceUsd }))));
-                
-            setAllCurrencies(all);
 
-            let filtered = all.filter(c => selectedCurrencies.includes(c.id));
 
-            //Sort filtered currency pairs alphabetically
-            filtered = filtered.sort((a, b) => {
+            //Sort currency pairs alphabetically
+            let sorted = all.sort((a, b) => {
                 if (a.id < b.id) {
                     return -1;
                 }
@@ -43,67 +34,64 @@ export const Dashboard = () => {
                 return 0;
             });
 
-            setFilteredCurrencies(filtered);
-
+            setAllCurrencies(sorted);
             first.current = true;
-
         };
         //Cal asyncs function
         apiCall();
-    }, [])
 
-    useEffect(() => {
-        //Prevent this hook from running on initial render
-        if (!first.current) {
-            return;
-        }
-        ws.current.onmessage = (msg: any) => {
-            //console.log("on message...");
-            let data = JSON.parse(msg.data);
-
-            let newList: ICurrency[] = [];
-            //console.log(data);
-            Object.keys(data).forEach(key => {
-                newList = filteredCurrencies.map((c: ICurrency) => {
-                    if (c.id === key) {
-                        const updatedC = {
-                            ...c,
-                            priceUsd: data[key]
-                        };
-                        return updatedC;
-                    }
-                    return c;
-                })
-
-                setFilteredCurrencies(newList);
-            });
-        }
-    }, [selectedCurrencies, updated]);
+    }, []);
 
     function onDelete(id: string) {
-        setUpdated(true);
-        setSelectedCurrencies(selectedCurrencies.filter(i => i !== id));
-        setUpdated(false);
+        setSelectedCurrencies(prevSelectedCurrencies => prevSelectedCurrencies.filter(i => i !== id));
+        
+        setFilteredCurrencies(prevFilteredCurrencies => prevFilteredCurrencies.filter(i => i.id !== id));
     }
 
     function onAdd(id: string) {
-        setUpdated(true);
         if (selectedCurrencies.includes(id)) { return; }    // Ignore if it already exists
         selectedCurrencies.push(id);
         setSelectedCurrencies(selectedCurrencies);
-        setUpdated(false);
+        setFilteredCurrencies(allCurrencies.filter(c => selectedCurrencies.includes(c.id)));
     }
 
 
     const CardItem: any = ({ id, name, priceUsd }: { id: string, name: string, priceUsd: string }) => {
-        var prices = filteredCurrencies.find(d => d.id === id);
 
-        const currentPriceInFloat = parseFloat(prices.priceUsd).toFixed(2);
-        //const PreviousPriceInFloat = parseFloat(prices?.priceUsd)?.toPrecision(4);
+        const [price, setPrice] = useState(priceUsd);
+        const prevPrice = usePrevious(price);
+
+        const ws = useRef(null);
+        useEffect(() => {
+            // Connect to websocket AP
+            ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + id);
+
+            ws.current.onmessage = (msg: any) => {
+                let data = JSON.parse(msg.data);
+
+                if (data[id] && data[id] !== prevPrice) {
+                    setPrice(data[id]);
+                }
+            }
+        }, [price, prevPrice, id]);
+
+        const currentPriceInFloat = parseFloat(price);
+        const previousPriceInFloat = parseFloat(prevPrice);
 
         return (
-            <Card key={id} id={id} name={name} currentPrice={currentPriceInFloat} previousPrice={currentPriceInFloat} onDelete={() => onDelete(id)} />
+            <Card key={id} id={id} name={name} currentPrice={currentPriceInFloat} previousPrice={previousPriceInFloat} onDelete={() => onDelete(id)} />
         )
+    }
+
+    // Returns previous value of state
+    function usePrevious(value: any) {
+        const ref = useRef();   // Stores current value in ref
+
+        useEffect(() => {
+            ref.current = value;
+        }, [value]); // Only re-run if value changes
+
+        return ref.current;
     }
 
     return (
@@ -117,7 +105,7 @@ export const Dashboard = () => {
                         {filteredCurrencies && filteredCurrencies.map((c: ICurrency) => {
                             return (c ? <CardItem key={c.id} {...c} /> : null)
                         })
-                    }
+                        }
                     </div>
                 </div>
             </section>
