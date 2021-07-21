@@ -10,17 +10,14 @@ export const Dashboard = () => {
     const [filteredCurrencies, setFilteredCurrencies] = useState<ICurrency[]>([]);   //Filtered currencies
     const [selectedCurrencies, setSelectedCurrencies] = useState([]);   //Name of the selected currencies to filter
 
-
     useEffect(() => {
         const url = `https://api.coincap.io/v2/assets`;
 
-        // Inside useEffect we need to make API with async function
         const apiCall = async () => {
             let all: ICurrency[] = [];
             await fetch(url)
                 .then((res) => res.json())
-                .then((data) => all = (data.data.map((c: ICurrency) => ({ id: c.id, symbol: c.symbol, name: c.name, priceUsd: c.priceUsd }))));
-
+                .then((data) => all = (data.data.map((c: ICurrency) => ({ id: c.id, name: c.name, priceUsd: c.priceUsd }))));
 
             //Sort currency pairs alphabetically
             let sorted = all.sort((a, b) => {
@@ -42,7 +39,6 @@ export const Dashboard = () => {
 
     function onDelete(id: string) {
         setSelectedCurrencies(prevSelectedCurrencies => prevSelectedCurrencies.filter(i => i !== id));
-
         setFilteredCurrencies(prevFilteredCurrencies => prevFilteredCurrencies.filter(i => i.id !== id));
     }
 
