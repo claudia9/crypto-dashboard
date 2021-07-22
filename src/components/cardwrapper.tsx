@@ -19,7 +19,7 @@ const CardWrapper: any = ({ id, name, priceUsd, onDelete }: CardWrapperProps) =>
         ws.current = new WebSocket(`wss://ws.coincap.io/prices?assets=` + id);
         ws.current.onmessage = function (msg: any) {
             let data = JSON.parse(msg.data);
-            console.log(data);
+            //console.log(data);
             setPrice(data[id]);
 
         }
