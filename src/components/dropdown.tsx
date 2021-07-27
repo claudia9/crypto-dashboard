@@ -9,7 +9,7 @@ export const Dropdown = ({ items, onAdd }: DropdownProps) => {
     const [open, setOpen] = useState<boolean>(false);
 
     if (items.length <= 0) {
-        return <p>No more currencies to be shown</p>;
+        return <p>No currencies to be shown</p>;
     }
 
     // Function to close dropdown when clicking outside the element

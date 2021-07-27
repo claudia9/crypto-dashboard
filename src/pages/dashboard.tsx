@@ -54,12 +54,12 @@ export const Dashboard = () => {
         <Page>
             <section className="dashboard-section">
                 <h1>Dashboard</h1>
-                <p className="lead">Check the prices of different cryptocurrencies in real-time. The cards are being updated every continuously. Click to the button below to add more cards to your dashboard. You also have the possibility to hide the cards that you no longer use. Enjoy! :-)</p>
+                <p className="lead">Check the prices of different cryptocurrencies in real-time. The cards are being updated continuously. Click to the button below to add more cards to your dashboard. You also have the possibility to hide the cards that you no longer use. Enjoy! :-)</p>
                 <div className="container">
                 <Dropdown items={(allCurrencies.filter(d => !selectedCurrencies.includes(d.id)))} onAdd={(id) => onAdd(id)} />
                     <div className="row">
                         {filteredCurrencies && filteredCurrencies.map((c: ICurrency) => {
-                            return (c ? <CardWrapper key={c.id} {...c} onDelete={(id: string) => onDelete(id)} /> : null)
+                            return (c ? <CardWrapper key={c.id} {...c} selectedCurrencies={selectedCurrencies} onDelete={(id: string) => onDelete(id)} /> : null)
                         })
                         }
                     </div>

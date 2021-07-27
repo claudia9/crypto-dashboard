@@ -5,10 +5,11 @@ type CardWrapperProps = {
     id: string,
     name: string,
     priceUsd: string,
+    selectedCurrencies: string[],
     onDelete: (id: string) => void
 }
 
-const CardWrapper: any = ({ id, name, priceUsd, onDelete }: CardWrapperProps) => {
+const CardWrapper: any = ({ id, name, priceUsd, selectedCurrencies, onDelete }: CardWrapperProps) => {
 
     const [price, setPrice] = useState(priceUsd);
     const prevPrice = usePrevious(price);
@@ -26,9 +27,11 @@ const CardWrapper: any = ({ id, name, priceUsd, onDelete }: CardWrapperProps) =>
 
         // Close this websocket before next effect runs
         return () => {
-            ws.current.close();
+            if (!selectedCurrencies.includes(id)) {
+                ws.current.close();
+            }
         }
-    }, [id, prevPrice]);
+    }, [id, prevPrice, selectedCurrencies]);
 
     const currentPriceInFloat = parseFloat(price);
     const previousPriceInFloat = parseFloat(prevPrice);
